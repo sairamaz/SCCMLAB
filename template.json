@@ -1,0 +1,1286 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachines_SCCM_AD_name": {
+            "defaultValue": "SCCM-AD",
+            "type": "String"
+        },
+        "virtualMachines_SCCM_Pri_name": {
+            "defaultValue": "SCCM-Pri",
+            "type": "String"
+        },
+        "virtualMachines_SCCM_SQL_name": {
+            "defaultValue": "SCCM-SQL",
+            "type": "String"
+        },
+        "virtualNetworks_SCCMVnet_name": {
+            "defaultValue": "SCCMVnet",
+            "type": "String"
+        },
+        "virtualNetworks_VnetEastUs2_name": {
+            "defaultValue": "VnetEastUs2",
+            "type": "String"
+        },
+        "storageAccounts_sccmdiag246_name": {
+            "defaultValue": "sccmdiag246",
+            "type": "String"
+        },
+        "storageAccounts_sccmdiag752_name": {
+            "defaultValue": "sccmdiag752",
+            "type": "String"
+        },
+        "virtualMachines_SCCM_Client1_name": {
+            "defaultValue": "SCCM-Client1",
+            "type": "String"
+        },
+        "virtualMachines_SCCM_Client2_name": {
+            "defaultValue": "SCCM-Client2",
+            "type": "String"
+        },
+        "networkInterfaces_sccm_ad374_name": {
+            "defaultValue": "sccm-ad374",
+            "type": "String"
+        },
+        "networkInterfaces_sccm_pri86_name": {
+            "defaultValue": "sccm-pri86",
+            "type": "String"
+        },
+        "publicIPAddresses_SCCM_AD_ip_name": {
+            "defaultValue": "SCCM-AD-ip",
+            "type": "String"
+        },
+        "networkInterfaces_sccm_sql334_name": {
+            "defaultValue": "sccm-sql334",
+            "type": "String"
+        },
+        "networkInterfaces_sccm_sql743_name": {
+            "defaultValue": "sccm-sql743",
+            "type": "String"
+        },
+        "networkSecurityGroups_sccm_NSG_name": {
+            "defaultValue": "sccm-NSG",
+            "type": "String"
+        },
+        "networkSecurityGroups_aadds_nsg_name": {
+            "defaultValue": "aadds-nsg",
+            "type": "String"
+        },
+        "networkInterfaces_sccm_client1503_name": {
+            "defaultValue": "sccm-client1503",
+            "type": "String"
+        },
+        "networkInterfaces_sccm_client2281_name": {
+            "defaultValue": "sccm-client2281",
+            "type": "String"
+        },
+        "publicIPAddresses_SCCM_Client2_ip_name": {
+            "defaultValue": "SCCM-Client2-ip",
+            "type": "String"
+        },
+        "networkSecurityGroups_sccm_NSG_EU2_name": {
+            "defaultValue": "sccm-NSG-EU2",
+            "type": "String"
+        },
+        "networkSecurityGroups_SCCM_Pri_nsg_name": {
+            "defaultValue": "SCCM-Pri-nsg",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('networkSecurityGroups_aadds_nsg_name')]",
+            "location": "eastus",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "AllowSyncWithAzureAD",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "443",
+                            "sourceAddressPrefix": "AzureActiveDirectoryDomainServices",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 101,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AllowPSRemoting",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "5986",
+                            "sourceAddressPrefix": "AzureActiveDirectoryDomainServices",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 301,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('networkSecurityGroups_sccm_NSG_name')]",
+            "location": "eastus",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "RDP-Port",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "access": "Allow",
+                            "priority": 400,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('networkSecurityGroups_sccm_NSG_EU2_name')]",
+            "location": "eastus2",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "RDP-Port",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "access": "Allow",
+                            "priority": 400,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('networkSecurityGroups_SCCM_Pri_nsg_name')]",
+            "location": "eastus2",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "RDP",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 300,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('publicIPAddresses_SCCM_AD_ip_name')]",
+            "location": "eastus",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "ipAddress": "52.188.5.226",
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('publicIPAddresses_SCCM_Client2_ip_name')]",
+            "location": "eastus2",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "name": "[parameters('storageAccounts_sccmdiag246_name')]",
+            "location": "eastus2",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "properties": {
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "name": "[parameters('storageAccounts_sccmdiag752_name')]",
+            "location": "eastus",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "properties": {
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2019-07-01",
+            "name": "[concat(parameters('virtualMachines_SCCM_AD_name'), '/AzureNetworkWatcherExtension')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_SCCM_AD_name'))]"
+            ],
+            "properties": {
+                "autoUpgradeMinorVersion": true,
+                "publisher": "Microsoft.Azure.NetworkWatcher",
+                "type": "NetworkWatcherAgentWindows",
+                "typeHandlerVersion": "1.4"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('networkInterfaces_sccm_client1503_name')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_VnetEastUs2_name'), 'default')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "10.1.0.5",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_VnetEastUs2_name'), 'default')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('networkInterfaces_sccm_client2281_name')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_VnetEastUs2_name'), 'default')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "10.1.0.6",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_VnetEastUs2_name'), 'default')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('networkInterfaces_sccm_sql334_name')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_SCCMVnet_name'), 'SCCMSubnet1')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "10.0.0.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_SCCMVnet_name'), 'SCCMSubnet1')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('networkInterfaces_sccm_sql743_name')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_SCCMVnet_name'), 'SCCMSubnet1')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "10.0.0.6",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_SCCMVnet_name'), 'SCCMSubnet1')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-04-01",
+            "name": "[concat(parameters('networkSecurityGroups_aadds_nsg_name'), '/AllowPSRemoting')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_aadds_nsg_name'))]"
+            ],
+            "properties": {
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "5986",
+                "sourceAddressPrefix": "AzureActiveDirectoryDomainServices",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 301,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-04-01",
+            "name": "[concat(parameters('networkSecurityGroups_aadds_nsg_name'), '/AllowSyncWithAzureAD')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_aadds_nsg_name'))]"
+            ],
+            "properties": {
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "443",
+                "sourceAddressPrefix": "AzureActiveDirectoryDomainServices",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 101,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-04-01",
+            "name": "[concat(parameters('networkSecurityGroups_SCCM_Pri_nsg_name'), '/RDP')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_SCCM_Pri_nsg_name'))]"
+            ],
+            "properties": {
+                "protocol": "TCP",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 300,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-04-01",
+            "name": "[concat(parameters('networkSecurityGroups_sccm_NSG_name'), '/RDP-Port')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_sccm_NSG_name'))]"
+            ],
+            "properties": {
+                "protocol": "TCP",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "VirtualNetwork",
+                "access": "Allow",
+                "priority": 400,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-04-01",
+            "name": "[concat(parameters('networkSecurityGroups_sccm_NSG_EU2_name'), '/RDP-Port')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_sccm_NSG_EU2_name'))]"
+            ],
+            "properties": {
+                "protocol": "TCP",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "VirtualNetwork",
+                "access": "Allow",
+                "priority": 400,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_sccmdiag246_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_sccmdiag246_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_sccmdiag752_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_sccmdiag752_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_sccmdiag246_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_sccmdiag246_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_sccmdiag752_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_sccmdiag752_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[parameters('virtualMachines_SCCM_AD_name')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_sccm_ad374_name'))]",
+                "[resourceId('Microsoft.Storage/StorageAccounts', parameters('storageAccounts_sccmdiag752_name'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2s"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "[concat(parameters('virtualMachines_SCCM_AD_name'), '_disk1_d580b388acd74446ab0b1cc1268bbe1e')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS",
+                            "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_SCCM_AD_name'), '_disk1_d580b388acd74446ab0b1cc1268bbe1e'))]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines_SCCM_AD_name')]",
+                    "adminUsername": "AzureUser",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true,
+                    "requireGuestProvisionSignal": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_sccm_ad374_name'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat('https://', parameters('storageAccounts_sccmdiag752_name'), '.blob.core.windows.net/')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[parameters('virtualMachines_SCCM_Client1_name')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_sccm_client1503_name'))]",
+                "[resourceId('Microsoft.Storage/StorageAccounts', parameters('storageAccounts_sccmdiag246_name'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B1ms"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsDesktop",
+                        "offer": "Windows-10",
+                        "sku": "19h1-ent",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "[concat(parameters('virtualMachines_SCCM_Client1_name'), '_OsDisk_1_02f0b3981500472e940570019e404b6f')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS",
+                            "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_SCCM_Client1_name'), '_OsDisk_1_02f0b3981500472e940570019e404b6f'))]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines_SCCM_Client1_name')]",
+                    "adminUsername": "AzureUser",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true,
+                    "requireGuestProvisionSignal": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_sccm_client1503_name'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat('https://', parameters('storageAccounts_sccmdiag246_name'), '.blob.core.windows.net/')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[parameters('virtualMachines_SCCM_Client2_name')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_sccm_client2281_name'))]",
+                "[resourceId('Microsoft.Storage/StorageAccounts', parameters('storageAccounts_sccmdiag246_name'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B1ms"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsDesktop",
+                        "offer": "Windows-10",
+                        "sku": "19h1-ent",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "[concat(parameters('virtualMachines_SCCM_Client2_name'), '_OsDisk_1_b958c96dd7924ac5893e99ef835973f7')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS",
+                            "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_SCCM_Client2_name'), '_OsDisk_1_b958c96dd7924ac5893e99ef835973f7'))]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines_SCCM_Client2_name')]",
+                    "adminUsername": "AzureUser",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true,
+                    "requireGuestProvisionSignal": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_sccm_client2281_name'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat('https://', parameters('storageAccounts_sccmdiag246_name'), '.blob.core.windows.net/')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[parameters('virtualMachines_SCCM_Pri_name')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_sccm_pri86_name'))]",
+                "[resourceId('Microsoft.Storage/StorageAccounts', parameters('storageAccounts_sccmdiag246_name'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2ms"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "[concat(parameters('virtualMachines_SCCM_Pri_name'), '_disk1_d5a2fd0bb90c48c299649567107c1ba6')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS",
+                            "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_SCCM_Pri_name'), '_disk1_d5a2fd0bb90c48c299649567107c1ba6'))]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": [
+                        {
+                            "lun": 0,
+                            "name": "[concat(parameters('virtualMachines_SCCM_Pri_name'), '_DataDisk_0')]",
+                            "createOption": "Attach",
+                            "caching": "None",
+                            "writeAcceleratorEnabled": false,
+                            "managedDisk": {
+                                "storageAccountType": "Premium_LRS",
+                                "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_SCCM_Pri_name'), '_DataDisk_0'))]"
+                            },
+                            "diskSizeGB": 128,
+                            "toBeDetached": false
+                        }
+                    ]
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines_SCCM_Pri_name')]",
+                    "adminUsername": "AzureUser",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true,
+                    "requireGuestProvisionSignal": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_sccm_pri86_name'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat('https://', parameters('storageAccounts_sccmdiag246_name'), '.blob.core.windows.net/')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[parameters('virtualMachines_SCCM_SQL_name')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_sccm_sql743_name'))]",
+                "[resourceId('Microsoft.Storage/StorageAccounts', parameters('storageAccounts_sccmdiag752_name'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2ms"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "[concat(parameters('virtualMachines_SCCM_SQL_name'), '_OsDisk_1_d7fcf0059f2e4f3baaa4503532ea3671')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS",
+                            "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_SCCM_SQL_name'), '_OsDisk_1_d7fcf0059f2e4f3baaa4503532ea3671'))]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": [
+                        {
+                            "lun": 0,
+                            "name": "SCCMDP-SQL",
+                            "createOption": "Attach",
+                            "caching": "None",
+                            "managedDisk": {
+                                "storageAccountType": "Premium_LRS",
+                                "id": "[resourceId('Microsoft.Compute/disks', 'SCCMDP-SQL')]"
+                            },
+                            "diskSizeGB": 64,
+                            "toBeDetached": false
+                        }
+                    ]
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines_SCCM_SQL_name')]",
+                    "adminUsername": "AzureUser",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true,
+                    "requireGuestProvisionSignal": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_sccm_sql743_name'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat('https://', parameters('storageAccounts_sccmdiag752_name'), '.blob.core.windows.net/')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('networkInterfaces_sccm_ad374_name')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_SCCM_AD_ip_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_SCCMVnet_name'), 'SCCMSubnet1')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "10.0.0.5",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_SCCM_AD_ip_name'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_SCCMVnet_name'), 'SCCMSubnet1')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('networkInterfaces_sccm_pri86_name')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_VnetEastUs2_name'), 'default')]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_SCCM_Pri_nsg_name'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "10.1.0.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_VnetEastUs2_name'), 'default')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_SCCM_Pri_nsg_name'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('virtualNetworks_SCCMVnet_name')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_sccm_NSG_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_VnetEastUs2_name'))]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "SCCMSubnet1",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_sccm_NSG_name'))]"
+                            },
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    }
+                ],
+                "virtualNetworkPeerings": [
+                    {
+                        "name": "SCCMLabPeer",
+                        "properties": {
+                            "peeringState": "Connected",
+                            "remoteVirtualNetwork": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_VnetEastUs2_name'))]"
+                            },
+                            "allowVirtualNetworkAccess": true,
+                            "allowForwardedTraffic": true,
+                            "allowGatewayTransit": false,
+                            "useRemoteGateways": false,
+                            "remoteAddressSpace": {
+                                "addressPrefixes": [
+                                    "10.1.0.0/16"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "enableDdosProtection": false,
+                "enableVmProtection": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-04-01",
+            "name": "[parameters('virtualNetworks_VnetEastUs2_name')]",
+            "location": "eastus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_sccm_NSG_EU2_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_SCCMVnet_name'))]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.1.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "default",
+                        "properties": {
+                            "addressPrefix": "10.1.0.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_sccm_NSG_EU2_name'))]"
+                            },
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    }
+                ],
+                "virtualNetworkPeerings": [
+                    {
+                        "name": "SCCMLabPeerEU2toEU1",
+                        "properties": {
+                            "peeringState": "Connected",
+                            "remoteVirtualNetwork": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_SCCMVnet_name'))]"
+                            },
+                            "allowVirtualNetworkAccess": true,
+                            "allowForwardedTraffic": true,
+                            "allowGatewayTransit": false,
+                            "useRemoteGateways": false,
+                            "remoteAddressSpace": {
+                                "addressPrefixes": [
+                                    "10.0.0.0/16"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "enableDdosProtection": false,
+                "enableVmProtection": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2020-04-01",
+            "name": "[concat(parameters('virtualNetworks_VnetEastUs2_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_VnetEastUs2_name'))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_sccm_NSG_EU2_name'))]"
+            ],
+            "properties": {
+                "addressPrefix": "10.1.0.0/24",
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_sccm_NSG_EU2_name'))]"
+                },
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Enabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2020-04-01",
+            "name": "[concat(parameters('virtualNetworks_SCCMVnet_name'), '/SCCMSubnet1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_SCCMVnet_name'))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_sccm_NSG_name'))]"
+            ],
+            "properties": {
+                "addressPrefix": "10.0.0.0/24",
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_sccm_NSG_name'))]"
+                },
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Enabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "apiVersion": "2020-04-01",
+            "name": "[concat(parameters('virtualNetworks_SCCMVnet_name'), '/SCCMLabPeer')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_SCCMVnet_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_VnetEastUs2_name'))]"
+            ],
+            "properties": {
+                "peeringState": "Connected",
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_VnetEastUs2_name'))]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteAddressSpace": {
+                    "addressPrefixes": [
+                        "10.1.0.0/16"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "apiVersion": "2020-04-01",
+            "name": "[concat(parameters('virtualNetworks_VnetEastUs2_name'), '/SCCMLabPeerEU2toEU1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_VnetEastUs2_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_SCCMVnet_name'))]"
+            ],
+            "properties": {
+                "peeringState": "Connected",
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_SCCMVnet_name'))]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteAddressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_sccmdiag752_name'), '/default/bootdiagnostics-sccmad-29b10c2e-4ab6-44ea-ae50-4e68974cf898')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_sccmdiag752_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_sccmdiag752_name'))]"
+            ],
+            "properties": {
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_sccmdiag246_name'), '/default/bootdiagnostics-sccmclien-3ff1228c-9384-40a2-8333-dbaf233a619e')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_sccmdiag246_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_sccmdiag246_name'))]"
+            ],
+            "properties": {
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_sccmdiag246_name'), '/default/bootdiagnostics-sccmclien-8c828805-5837-48a9-ba0b-351c7d04e450')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_sccmdiag246_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_sccmdiag246_name'))]"
+            ],
+            "properties": {
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_sccmdiag246_name'), '/default/bootdiagnostics-sccmpri-95a07fe4-2e02-447d-b7d5-0dd556c38382')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_sccmdiag246_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_sccmdiag246_name'))]"
+            ],
+            "properties": {
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_sccmdiag752_name'), '/default/bootdiagnostics-sccmsql-85001462-494c-4667-beae-029d97952813')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_sccmdiag752_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_sccmdiag752_name'))]"
+            ],
+            "properties": {
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(parameters('storageAccounts_sccmdiag752_name'), '/default/bootdiagnostics-sccmsql-c1f95ca0-300d-48c8-81c2-d328c5538aef')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_sccmdiag752_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_sccmdiag752_name'))]"
+            ],
+            "properties": {
+                "publicAccess": "None"
+            }
+        }
+    ]
+}
